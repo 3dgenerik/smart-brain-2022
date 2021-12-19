@@ -27,7 +27,8 @@ class App extends Component{
   constructor(){
     super();
     this.state = {
-      input:''
+      input:'',
+      box:[]
     }
   }
 
@@ -39,11 +40,18 @@ class App extends Component{
     this.setState({input:Placeholder});
   }
 
+  calcFaceRegion = (data) => {
+    const collectRegions = data.outputs[0].data.regions.map(region => {
+      return region.region_info.bounding_box;
+    })
+    return collectRegions;
+  }
+
   onButtonSubmit = (event) => {
     event.preventDefault();
-    app.models.predict(Clarifai.CELEBRITY_MODEL, this.state.input)
-    .then(data => {
-      console.log(data)
+    app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
+    .then(response => {
+      this.setState({box:this.calcFaceRegion(response)});
     }).catch(error => {
       this.setPlaceHolder();
     })
@@ -55,13 +63,17 @@ class App extends Component{
 
   
   render(){
-    console.log(this.state.input)
     return(
       <>
         <Navigation/>
         <Rank/>
-        <ImageLinkForm inputChange = {this.onInputChange} buttonSubmit = {this.onButtonSubmit}/>
-        <ImageHolder imageUrl = {this.state.input} imageError = {this.onImageError}/>
+        <ImageLinkForm
+          inputChange = {this.onInputChange}
+          buttonSubmit = {this.onButtonSubmit}/>
+        <ImageHolder
+          imageUrl = {this.state.input}
+          imageError = {this.onImageError}
+          boundingBox = {this.state.box}/>
       </>
 
     )
